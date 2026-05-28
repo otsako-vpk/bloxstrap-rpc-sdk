@@ -1,11 +1,13 @@
 --!strict
 
--- BloxstrapRPC SDK Module v1.1.0
+-- BloxstrapRPC SDK Module v1.2.0
 -- Written by pizzaboxer (@xtremeguy2256) and Epix (@ElusiveEpix)
 -- Types reflected from https://github.com/bloxstraplabs/bloxstrap/tree/main/Bloxstrap/Models/BloxstrapRPC
--- Further documentation is available at https://github.com/bloxstraplabs/bloxstrap/wiki/Integrating-Bloxstrap-functionality-into-your-game
+-- Further documentation is available at https://bloxstraplabs.com/wiki/developers/bloxstraprpc
 
+local EncodingService = game:GetService("EncodingService")
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
 local BloxstrapRPC = {}
 
@@ -26,9 +28,20 @@ export type RichPresenceImage = {
 }
 
 --[=[
+	Create a persistent ScreenGui and ImageLabel for sending messages
+]=]
+local gui = Instance.new("ScreenGui")
+gui.ResetOnSpawn = false
+gui.Name = "BloxstrapRPC"
+gui.Parent = (Players.LocalPlayer :: Player).PlayerGui
+local img = Instance.new("ImageLabel")
+img.Image = ""
+img.Parent = gui
+
+--[=[
 	Removes any non-number characters from AssetId, useful if the developer is passing in a ID that is taken directly from Instances like Decals or ImageLabels that contain `rbxassetid` or a URL like `http://www.roblox.com/asset/?id=`.
 ]=]
-function SanitiseAssetId(assetId: string): number?
+function SanitiseAssetId(assetId: string | number?): number?
 	if type(assetId) ~= "string" then
 		return assetId
 	end
@@ -45,8 +58,12 @@ function BloxstrapRPC.SendMessage(command: string, data: any)
 		command = command,
 		data = data,
 	})
-
-	print("[BloxstrapRPC] " .. json)
+	
+	local base64 = buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(json)))
+	
+	img.Image = "rbxasset://textures/|.png?TIME="..tick().."&BLOXSTRAP_INFO="..base64
+	
+	--print("[BloxstrapRPC] " .. json) -- Old behaviour.
 end
 
 --[=[
